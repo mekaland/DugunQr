@@ -1,0 +1,202 @@
+{
+  "name": "GdriveQr",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "let results = [];\nconst items = $input.all()\n\nfor (item of items) {\n    for (key of Object.keys(item.binary)) {\n        results.push({\n            json: {\n                fileName: item.binary[key].fileName\n            },\n            binary: {\n                data: item.binary[key],\n            }\n        });\n    }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        -100
+      ],
+      "id": "96d08f3f-b0f0-41d5-8397-de2af0d7ee2c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Dosya bilgilerini al\nconst binaryData = items[0].binary;\nconst results = [];\n\n// Tüm binary data'ları döngüyle kontrol et\nfor (const key in binaryData) {\n    if (binaryData.hasOwnProperty(key)) {\n        results.push({\n            json: {\n                fileName: binaryData[key].fileName,\n                mimeType: binaryData[key].mimeType,\n                fileSize: binaryData[key].fileSize\n            },\n            binary: {\n                data: binaryData[key],\n            }\n        });\n    }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        340,
+        100
+      ],
+      "id": "c5f8ec93-73ee-4ceb-8a7b-d70c46e22187",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "name": "={{ $now.toMillis() }}-{{ $input.item.json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1Ne-WPlPT_H7ruMei3mUFI0UIIFoaxmK_",
+          "mode": "list",
+          "cachedResultName": "Dugun",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1Ne-WPlPT_H7ruMei3mUFI0UIIFoaxmK_"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        580,
+        -20
+      ],
+      "id": "c849875b-1632-4572-b7bb-a9fdeed5e832",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gmbqIOhB2IHGq2uw",
+          "name": "Google Drive account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Düğünümüze Hoşgeldiniz",
+        "formDescription": "Lütfen Çektiğiniz Fotoğrafları Bizimle Paylaşın.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Fotoğraf Yükle",
+              "fieldType": "file",
+              "acceptFileTypes": ".jpg, .jpeg, .png, .gif, .bmp, .tiff, .tif, .webp, .heic, .heif, .raw, .cr2, .cr3, .nef, .arw, .orf, .rw2, .svg, .ico, .psd, .ai",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false,
+          "buttonLabel": "Gönder",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Teşekkürler!"
+            }
+          },
+          "ignoreBots": true
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        140,
+        -120
+      ],
+      "id": "6bbfd3e8-6481-4960-8854-60bd6fee5e11",
+      "name": "On form submission",
+      "webhookId": "5ae02797-4b9e-4f88-931b-c84eadf57ed5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-image",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "data",
+          "rawBody": true
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        100
+      ],
+      "id": "d4d9b37a-dee2-46fc-bdde-8f0c4aba4444",
+      "name": "Webhook",
+      "webhookId": "f93a73d9-51ca-4363-a9d1-0f818b4cb972"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        800,
+        60
+      ],
+      "id": "5d4ad888-aeda-46ab-b4bc-b24b20e9b38e",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "310f41e3-7355-400c-88f4-38cd6525b3b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e91f3d53ba5410c21b83dfda14be41a9f5f653c1fd0d7ac0851b7736ca42e6f5"
+  },
+  "id": "X5AwejncGhapKUab",
+  "tags": []
+}
